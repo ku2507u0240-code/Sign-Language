@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignSense | Applied AI Mini Project</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SignSense Translator</h1>
+            <p>Real-Time Sign Language Recognition</p>
+        </header>
+
+        <main>
+            <div class="video-section">
+                <button type="button" onclick="init()" class="start-btn">Start Camera & AI Model</button>
+                <div id="webcam-container"></div>
+            </div>
+            
+            <div class="results-section">
+                <h2>Translation Output:</h2>
+                <div id="label-container" class="output-box">Waiting for model...</div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Applied AI Mini Project | Christ (Deemed to be University)</p>
+            <p class="team-names">Team: Member 1 | Member 2 | Member 3 | Member 4 | Member 5</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
