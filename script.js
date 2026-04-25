@@ -1,58 +1,56 @@
 // ==========================================
-// PASTE YOUR TEACHABLE MACHINE LINK BELOW
-// Example: const URL = "https://teachablemachine.withgoogle.com/models/abc123xyz/";
+// PASTE YOUR POSE MODEL LINK BELOW
 // ==========================================
 const URL = "https://teachablemachine.withgoogle.com/models/Uh_isQoEs/"; 
 
-let model, webcam, labelContainer, maxPredictions;
+let model, webcam, ctx, labelContainer, maxPredictions;
 
-// Load the image model and setup the webcam
 async function init() {
-    if(URL === "YOUR_LINK_GOES_HERE") {
-        alert("Please add your Teachable Machine URL in script.js!");
-        return;
-    }
-
     const modelURL = URL + "model.json";
     const metadataURL = URL + "metadata.json";
 
-    // Change button text to show loading state
-    document.querySelector('.start-btn').innerText = "Loading AI Model...";
+    document.querySelector('.start-btn').innerText = "Loading AI...";
 
-    // Load the model and metadata
-    model = await tmImage.load(modelURL, metadataURL);
+    // Load the POSE model
+    model = await tmPose.load(modelURL, metadataURL);
     maxPredictions = model.getTotalClasses();
 
-    // Setup webcam for image classification
-    const flip = true; // whether to flip the webcam
-    webcam = new tmImage.Webcam(400, 400, flip); // width, height, flip
-    await webcam.setup(); // request access to the webcam
+    // Setup webcam
+    const size = 300; 
+    const flip = true; 
+    webcam = new tmPose.Webcam(size, size, flip); 
+    await webcam.setup(); 
     await webcam.play();
     window.requestAnimationFrame(loop);
 
-    // Append webcam canvas to the DOM
+    // Setup Canvas (Pose needs a canvas to draw the video)
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    ctx = canvas.getContext("2d");
+    
     document.getElementById("webcam-container").innerHTML = "";
-    document.getElementById("webcam-container").appendChild(webcam.canvas);
+    document.getElementById("webcam-container").appendChild(canvas);
     
     labelContainer = document.getElementById("label-container");
-    document.querySelector('.start-btn').style.display = 'none'; // Hide button after start
+    document.querySelector('.start-btn').style.display = 'none';
 }
 
 async function loop() {
-    webcam.update(); // update the webcam frame
+    webcam.update(); 
+    ctx.drawImage(webcam.canvas, 0, 0); // Draw the video frame
     await predict();
     window.requestAnimationFrame(loop);
 }
 
-// Run the webcam image through the image model
 async function predict() {
-    // predict can take in an image, video or canvas html element
-    const prediction = await model.predict(webcam.canvas);
-    
+    // This is the line that was crashing! Pose needs both of these steps:
+    const { pose, posenetOutput } = await model.estimatePose(webcam.canvas);
+    const prediction = await model.predict(posenetOutput);
+
     let highestProbability = 0;
     let bestPrediction = "";
 
-    // Find the class with the highest probability
     for (let i = 0; i < maxPredictions; i++) {
         if (prediction[i].probability > highestProbability) {
             highestProbability = prediction[i].probability;
@@ -60,10 +58,8 @@ async function predict() {
         }
     }
 
-    // Only update text if confidence is over 75% to avoid flickering
     if (highestProbability > 0.75) {
-        // Hide "Background" or "Idle" classes if you named one that way
-        if (bestPrediction.toLowerCase() !== "background" && bestPrediction.toLowerCase() !== "idle") {
+        if (bestPrediction.toLowerCase() !== "idle" && bestPrediction.toLowerCase() !== "neutral") {
              labelContainer.innerHTML = bestPrediction + " (" + (highestProbability * 100).toFixed(0) + "%)";
         } else {
              labelContainer.innerHTML = "Waiting for sign...";
